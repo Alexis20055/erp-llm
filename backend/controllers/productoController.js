@@ -1,46 +1,53 @@
 const Producto = require('../models/Producto');
 
-// Función para crear un nuevo producto
 const crearProducto = async (req, res) => {
-    try { //con catch para error general
-
-         //Extraemos los datos que vienen en el JSON
+    try {
         const { nombre, descripcion, precio, stock, proveedor, fechaCaducidad } = req.body;
-
-        // Creamos una nueva instancia del modelo Producto con esos datos
-        const nuevoProducto = new Producto({
-            nombre,
-            descripcion,
-            precio,
-            stock,
-            proveedor,
-            fechaCaducidad
-        });
-
-        // lo guardamos en la base de datos de MongoDB
+        const nuevoProducto = new Producto({ nombre, descripcion, precio, stock, proveedor, fechaCaducidad });
         const productoGuardado = await nuevoProducto.save();
-
-        // devolvemos una respuesta de éxito cdigo 201
-        res.status(201).json({
-            mensaje: 'Producto creado exitosamente',
-            producto: productoGuardado
-        });
-
+        res.status(201).json({ mensaje: 'Producto creado exitosamente', producto: productoGuardado });
     } catch (error) {
-        // Si hay algún error por ejemplo faltan campos obligatorios
-        console.error('Error al crear el producto:', error);
-
-        //TODO: Cambiar el error? Este es un error general
-
-        // devolvemos un código de error 400 Bad Request
-        res.status(400).json({
-            mensaje: 'Hubo un error al crear el producto',
-            error: error.message
-        });
+        res.status(400).json({ mensaje: 'Hubo un error al crear el producto', error: error.message });
     }
 };
 
-// Exportamos la función para poder usarla 
-module.exports = {
-    crearProducto
+const obtenerProductos = async (req, res) => {
+    try {
+        const productos = await Producto.find().populate('proveedor');
+        res.status(200).json(productos);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
+
+const obtenerProductoPorId = async (req, res) => {
+    try {
+        const producto = await Producto.findById(req.params.id).populate('proveedor');
+        if (!producto) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+        res.status(200).json(producto);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const actualizarProducto = async (req, res) => {
+    try {
+        const producto = await Producto.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after', runValidators: true }).populate('proveedor');
+        if (!producto) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+        res.status(200).json({ mensaje: 'Producto actualizado', producto });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+const eliminarProducto = async (req, res) => {
+    try {
+        const producto = await Producto.findByIdAndDelete(req.params.id);
+        if (!producto) return res.status(404).json({ mensaje: 'Producto no encontrado' });
+        res.status(200).json({ mensaje: 'Producto eliminado' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { crearProducto, obtenerProductos, obtenerProductoPorId, actualizarProducto, eliminarProducto };
