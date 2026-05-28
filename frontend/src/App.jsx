@@ -1,0 +1,230 @@
+import { useState, useEffect, useRef } from "react";
+import api from "./services/api";
+import ChatMessage from "./components/ChatMessage";
+import ProductsTable from "./components/ProductsTable";
+
+function App() {
+  const [mensaje, setMensaje] = useState("");
+  const [chat, setChat] = useState([]);
+  const [productos, setProductos] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const chatRef = useRef(null);
+
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    }
+  }, [chat, cargando, productos]);
+
+  const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const escribirRespuestaIA = async (texto) => {
+    const id = Date.now();
+
+    setChat((prev) => [
+      ...prev,
+      { id, autor: "ia", texto: "", escribiendo: true }
+    ]);
+
+    for (let i = 0; i <= texto.length; i++) {
+      await esperar(25);
+
+      setChat((prev) =>
+        prev.map((msg) =>
+          msg.id === id
+            ? { ...msg, texto: texto.slice(0, i) }
+            : msg
+        )
+      );
+    }
+  setChat((prev) =>
+  prev.map((msg) =>
+    msg.id === id
+      ? { ...msg, escribiendo: false }
+      : msg
+  )
+);
+  };
+
+  const enviarMensaje = async () => {
+    if (!mensaje.trim()) return;
+
+    const textoUsuario = mensaje.toLowerCase();
+
+    setChat((prev) => [
+      ...prev,
+      { autor: "usuario", texto: mensaje }
+    ]);
+
+    setMensaje("");
+
+    try {
+        setCargando(true);
+
+      // PRODUCTOS
+      if (textoUsuario.includes("producto")) {
+
+        const response = await api.get("/productos");
+
+        setProductos(response.data);
+
+       await esperar(700);
+       setCargando(false);
+       await escribirRespuestaIA("Aquí tienes los productos");
+      }
+
+      // PROVEEDORES
+      else if (textoUsuario.includes("proveedor")) {
+
+        const response = await api.get("/proveedores");
+
+        console.log(response.data);
+
+       await esperar(700);
+       setCargando(false);
+       await escribirRespuestaIA("Aquí tienes los proveedores");
+      }
+
+      // MENSAJE NO ENTENDIDO
+      else {
+
+       await esperar(700);
+       setCargando(false);
+       await escribirRespuestaIA("No he entendido la petición");
+      }
+
+    } catch (error) {
+
+      await esperar(700);
+      setCargando(false);
+      await escribirRespuestaIA("Error conectando con backend");
+      }
+  };
+
+ return (
+   <div
+     style={{
+       height: "100vh",
+       width: "100vw",
+       background: "linear-gradient(135deg, #020617, #0f172a)",
+       color: "white",
+       display: "flex",
+       justifyContent: "center",
+       fontFamily: "Arial, sans-serif",
+       overflow: "hidden",
+     }}
+   >
+     <div
+       style={{
+         width: "100%",
+         maxWidth: "1200px",
+         height: "100vh",
+         display: "flex",
+         flexDirection: "column",
+         padding: "20px",
+         boxSizing: "border-box",
+       }}
+     >
+       <header style={{ marginBottom: "16px", textAlign: "center" }}>
+         <h1 style={{ margin: 0, fontSize: "34px" }}>ERP con IA</h1>
+         <p style={{ marginTop: "8px", color: "#94a3b8" }}>
+           Gestiona productos, proveedores, pedidos y estadísticas mediante lenguaje natural.
+         </p>
+       </header>
+
+       <main
+        ref={chatRef}
+         style={{
+           flex: 1,
+           border: "1px solid #334155",
+           background: "rgba(15, 23, 42, 0.85)",
+           padding: "20px",
+           borderRadius: "20px",
+           overflowY: "auto",
+           boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
+         }}
+       >
+         {chat.length === 0 && (
+           <div
+             style={{
+               height: "100%",
+               display: "flex",
+               alignItems: "center",
+               justifyContent: "center",
+               color: "#94a3b8",
+               textAlign: "center",
+             }}
+           >
+             <div>
+               <h2 style={{ color: "white" }}>Bienvenido al ERP inteligente</h2>
+               <p>Escribe una orden como: “Muéstrame los productos”.</p>
+             </div>
+           </div>
+         )}
+
+         {chat.map((msg, index) => (
+           <ChatMessage
+             key={index}
+             autor={msg.autor}
+             texto={msg.texto}
+             escribiendo={msg.escribiendo}
+           />
+         ))}
+
+         {cargando && (
+           <ChatMessage autor="ia" texto="Pensando..." />
+         )}
+
+         <ProductsTable productos={productos} />
+       </main>
+
+       <section
+         style={{
+           display: "flex",
+           gap: "12px",
+           marginTop: "14px",
+           background: "#020617",
+           padding: "14px",
+           borderRadius: "18px",
+           border: "1px solid #334155",
+         }}
+       >
+         <input
+           type="text"
+           value={mensaje}
+           onChange={(e) => setMensaje(e.target.value)}
+           onKeyDown={(e) => e.key === "Enter" && enviarMensaje()}
+           placeholder="Ej: Muéstrame los productos"
+           style={{
+             flex: 1,
+             padding: "14px",
+             borderRadius: "12px",
+             border: "1px solid #334155",
+             background: "#0f172a",
+             color: "white",
+             outline: "none",
+             fontSize: "15px",
+           }}
+         />
+
+         <button
+           onClick={enviarMensaje}
+           style={{
+             padding: "14px 24px",
+             border: "none",
+             borderRadius: "12px",
+             cursor: "pointer",
+             background: "#2563eb",
+             color: "white",
+             fontWeight: "bold",
+           }}
+         >
+           Enviar
+         </button>
+       </section>
+     </div>
+   </div>
+ );
+ }
+
+export default App;
