@@ -13,8 +13,8 @@ const MODELOS = [
   },
   {
     id: 'groq-mixtral',
-    nombre: 'Mixtral 8x7B (Groq)',
-    desc: 'MoE, ~1.5s',
+    nombre: 'Gemma 2 9B (Groq)',
+    desc: 'Google via Groq, ~1s',
     apiKey: 'GROQ_API_KEY'
   }
 ];

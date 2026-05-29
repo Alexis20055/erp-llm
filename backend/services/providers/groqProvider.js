@@ -3,7 +3,7 @@ const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODELOS = {
   'groq-llama': 'llama-3.3-70b-versatile',
   'groq-llama8b': 'llama-3.1-8b-instant',
-  'groq-mixtral': 'mixtral-8x7b-32768'
+  'groq-mixtral': 'gemma2-9b-it'
 };
 
 async function ask(mensajes, modeloId) {
