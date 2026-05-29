@@ -13,8 +13,8 @@ const MODELOS = [
   },
   {
     id: 'hf-mistral',
-    nombre: 'Mistral 7B (HuggingFace)',
-    desc: 'Hugging Face — gratuito, menos fiable',
+    nombre: 'Gemma 2 2B (HuggingFace)',
+    desc: 'HF — ligero, cold start ~20s',
     apiKey: 'HUGGINGFACE_API_KEY'
   }
 ];

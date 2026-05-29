@@ -37,11 +37,25 @@ npm run dev &
 FRONTEND_PID=$!
 echo "   Frontend PID: $FRONTEND_PID"
 
-sleep 2
+sleep 3
+
+# 5. Poblar BD automáticamente
+echo "🌱 Poblando BD con datos de prueba..."
+for i in 1 2 3; do
+  RESULT=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:5000/api/seed 2>/dev/null)
+  if [ "$RESULT" = "201" ]; then
+    echo "   BD poblada correctamente"
+    break
+  fi
+  sleep 2
+done
+if [ "$RESULT" != "201" ]; then
+  echo "   ⚠️ No se pudo poblar BD (backend no listo aún). Ejecuta luego: curl -X POST http://localhost:5000/api/seed"
+fi
+
 echo ""
 echo "✅ ERP listo en http://localhost:5173"
 echo ""
-echo "Para seed de datos:  curl -X POST http://localhost:5000/api/seed"
 echo "Para ver logs LLM:   curl http://localhost:5000/api/llm/logs"
 echo ""
 echo "Presiona Ctrl+C para parar todo"

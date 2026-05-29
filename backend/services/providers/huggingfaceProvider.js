@@ -1,9 +1,9 @@
-const HF_URL = 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3';
+const HF_URL = 'https://api-inference.huggingface.co/models/google/gemma-2-2b-it';
 
 function buildPrompt(mensajes) {
   const system = mensajes.find(m => m.role === 'system')?.content || '';
   const user = mensajes.find(m => m.role === 'user')?.content || '';
-  return `<s>[INST] ${system}\n\n${user} [/INST]`;
+  return `<start_of_turn>user\n${system}\n\n${user}<end_of_turn>\n<start_of_turn>model\n`;
 }
 
 async function ask(mensajes) {
@@ -35,6 +35,9 @@ async function ask(mensajes) {
 
     if (!response.ok) {
       const text = await response.text();
+      if (response.status === 503) {
+        throw new Error('HuggingFace: modelo cargando (cold start), espera 20s y reintenta');
+      }
       throw new Error(`HuggingFace error (${response.status}): ${text}`);
     }
 
