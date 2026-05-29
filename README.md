@@ -1,51 +1,55 @@
 # ERP con IA
 
-Prototipo de ERP con integración de modelos LLM locales (Ollama).  
+Prototipo de ERP con integración de 3 modelos LLM vía APIs cloud gratuitas (Gemini, Groq, HuggingFace).  
 Toda la interacción con el sistema se realiza mediante lenguaje natural a través de un chat.
 
 ## Requisitos
 
 - **Node.js** >= 18
 - **MongoDB** corriendo en `localhost:27017`
-- **Ollama** con al menos un modelo descargado
+- **3 API keys** gratuitas (ver sección Configuración)
+- **Docker** (para MongoDB, o instala MongoDB nativo)
 
-## Instalación
-
-### 1. Backend
+## Instalación rápida
 
 ```bash
+# 1. Backend
 cd backend
 npm install
-cp .env .env.local  # opcional, los valores por defecto funcionan
-npm run dev
-```
 
-### 2. Frontend
+# 2. Editar .env con tus API keys (ver más abajo)
 
-```bash
-cd frontend
+# 3. Frontend
+cd ../frontend
 npm install
-npm run dev
+
+# 4. Arrancar MongoDB
+sudo docker run -d --name mongodb -p 27017:27017 mongo:7
+
+# 5. Arrancar
+cd ..
+./start-erp.sh
 ```
 
 Abrir [http://localhost:5173](http://localhost:5173)
 
-### 3. Ollama (modelos locales)
+## Configuración: API Keys (GRATIS)
 
-```bash
-# Instalar Ollama
-curl -fsSL https://ollama.com/install.sh | sh
+Edita `backend/.env` con las 3 keys:
 
-# Descargar modelos (elige al menos uno)
-ollama pull llama3.2      # ~2GB - Rápido, básico
-ollama pull phi3.5        # ~2.5GB - Equilibrado (alternativa ligera)
-ollama pull mistral       # ~4.1GB - Preciso
-
-# Asegurarse de que Ollama está corriendo
-ollama serve
+```env
+GEMINI_API_KEY=AIzaSy...        # https://aistudio.google.com/app/apikey
+GROQ_API_KEY=gsk_...            # https://console.groq.com/keys
+HUGGINGFACE_API_KEY=hf_...      # https://huggingface.co/settings/tokens
 ```
 
-### 4. Poblar base de datos
+| Proveedor | Modelo | Gratis | Dónde conseguirla |
+|-----------|--------|--------|-------------------|
+| Google Gemini | Gemini 2.0 Flash | 60 req/min, 1500/día | aistudio.google.com (cuenta Google) |
+| Groq | Llama 3.1 70B | 30 req/min, 14400/día | console.groq.com (cuenta email) |
+| Hugging Face | Mistral 7B | 30 req/min, 500/día | huggingface.co/settings/tokens |
+
+## Poblar base de datos
 
 ```bash
 curl -X POST http://localhost:5000/api/seed
@@ -58,55 +62,36 @@ Escribe en lenguaje natural en el chat. Ejemplos:
 | Comando | Qué hace |
 |---------|----------|
 | "muestra los productos" | Lista todos los productos |
-| "enséñame los proveedores" | Lista todos los proveedores |
 | "crea un producto llamado Leche con precio 2.5 y stock 100" | Crea un producto nuevo |
-| "añade un proveedor llamado Pepito, email pepito@mail.com, teléfono 123456789" | Crea un proveedor nuevo |
 | "crea un pedido a Distribuidora Alimenticia con 10 Leches" | Crea un pedido (incrementa stock) |
 | "registra un desecho de 5 unidades de Leche por caducidad" | Registra pérdida de stock |
 | "verifica productos caducados" | Busca y elimina productos caducados |
 | "qué productos tienen stock bajo" | Estadística: stock por debajo de 10 |
 | "cuál es el valor del inventario" | Estadística: valor total del stock |
-| "desechos por mes" | Estadística: pérdidas agregadas por mes |
 
-## Seleccionar modelo
+Usa el desplegable sobre el chat para cambiar entre los 3 modelos.
 
-Usa el desplegable sobre el chat para cambiar entre los modelos de Ollama disponibles.
+## Script de arranque
 
-## API endpoints
+```bash
+./start-erp.sh   # Arranca MongoDB, backend y frontend de golpe
+```
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | `/api/llm/chat` | Enviar mensaje al LLM |
-| GET | `/api/llm/logs` | Ver logs de interacciones |
-| POST | `/api/seed` | Poblar BD con datos de prueba |
-| GET/POST/PUT/DELETE | `/api/productos` | CRUD de productos |
-| GET/POST/PUT/DELETE | `/api/proveedores` | CRUD de proveedores |
-| GET/POST/PUT/DELETE | `/api/pedidos` | CRUD de pedidos |
-| GET/POST/PUT/DELETE | `/api/desechos` | CRUD de desechos |
-| GET | `/api/estadisticas/*` | Estadísticas |
-
-## Estructura del proyecto
+## Estructura
 
 ```
 erp-llm/
 ├── backend/
-│   ├── controllers/       # Lógica de endpoints
-│   ├── models/            # Schemas de Mongoose
-│   ├── routes/            # (vacio, reemplazado por rutas/)
-│   ├── rutas/             # Definiciones de rutas
-│   ├── services/          # LLM service + action executor
-│   ├── .env               # Configuración
-│   └── index.js           # Entry point
+│   ├── controllers/        # Lógica de endpoints
+│   ├── models/             # Schemas de Mongoose
+│   ├── services/
+│   │   ├── providers/      # geminiProvider, groqProvider, huggingfaceProvider
+│   │   ├── llmService.js   # Router a providers
+│   │   └── actionExecutor.js
+│   └── index.js
 ├── frontend/
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   └── services/      # Axios API client
-│   └── index.html
+│   ├── src/components/     # ChatMessage, ProductsTable, ProvidersTable, StatsView, ModelSelector
+│   └── src/services/api.js
+├── start-erp.sh
 └── README.md
 ```
-
-## Problemas conocidos
-
-- **phi4 requiere 16GB+ RAM**: En máquinas con 8GB RAM, usar llama3.2, phi3.5 o mistral.
-- **JSON inconsistente**: Modelos pequeños (llama3.2) pueden devolver JSON inválido. El backend reintenta automáticamente.
-- **Extracción de datos**: El LLM asigna valores por defecto si faltan campos en comandos como "crear producto".

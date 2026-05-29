@@ -12,7 +12,7 @@ function App() {
   const [productos, setProductos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
   const [stats, setStats] = useState(null);
-  const [modelo, setModelo] = useState("llama3.2");
+  const [modelo, setModelo] = useState("gemini-flash");
   const [cargando, setCargando] = useState(false);
   const chatRef = useRef(null);
 

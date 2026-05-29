@@ -1,4 +1,6 @@
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
+const geminiProvider = require('./providers/geminiProvider');
+const groqProvider = require('./providers/groqProvider');
+const huggingfaceProvider = require('./providers/huggingfaceProvider');
 
 const SYSTEM_PROMPT = `Eres un asistente de ERP especializado en interpretar mensajes de usuarios y convertirlos en acciones del sistema.
 
@@ -30,70 +32,53 @@ REGLAS PARA CADA ACCIÓN:
 
 EJEMPLOS:
 Usuario: "muestra los productos"
-{"mensaje": "Aquí tienes todos los productos registrados en el sistema", "accion": "listar_productos", "entidad": "productos", "datos": {}}
+{"mensaje": "Aquí tienes todos los productos registrados", "accion": "listar_productos", "entidad": "productos", "datos": {}}
 
-Usuario: "enséñame los proveedores"
-{"mensaje": "Claro, estos son los proveedores disponibles", "accion": "listar_proveedores", "entidad": "proveedores", "datos": {}}
+Usuario: "crea un producto llamado Leche con precio 2.5"
+{"mensaje": "Voy a crear el producto Leche", "accion": "crear_producto", "entidad": "productos", "datos": {"nombre": "Leche", "descripcion": "", "precio": 2.5, "stock": 0, "fechaCaducidad": null}}
 
-Usuario: "crea un producto llamado Leche entera con precio 2.50 y stock 100"
-{"mensaje": "Voy a crear el producto Leche entera", "accion": "crear_producto", "entidad": "productos", "datos": {"nombre": "Leche entera", "descripcion": "", "precio": 2.5, "stock": 100, "fechaCaducidad": null}}
+Usuario: "crea un pedido a Distribuidora Alimenticia con 10 Leches"
+{"mensaje": "Creando pedido", "accion": "crear_pedido", "entidad": "pedidos", "datos": {"proveedorNombre": "Distribuidora Alimenticia", "productos": [{"productoNombre": "Leche", "cantidad": 10}], "costeTotal": 25}}
 
-Usuario: "registra un desecho de 5 unidades de Leche por caducidad"
-{"mensaje": "Registrando desecho de 5 unidades", "accion": "registrar_desecho", "entidad": "desechos", "datos": {"productoNombre": "Leche", "cantidadPerdida": 5, "motivo": "Caducidad"}}
-
-Usuario: "crea un pedido a Distribuidora Alimenticia con 50 Leches"
-{"mensaje": "Creando pedido a Distribuidora Alimenticia", "accion": "crear_pedido", "entidad": "pedidos", "datos": {"proveedorNombre": "Distribuidora Alimenticia", "productos": [{"productoNombre": "Leche", "cantidad": 50}], "costeTotal": 125}}
+Usuario: "registra un desecho de 5 Leches por caducidad"
+{"mensaje": "Registrando desecho", "accion": "registrar_desecho", "entidad": "desechos", "datos": {"productoNombre": "Leche", "cantidadPerdida": 5, "motivo": "Caducidad"}}
 
 Usuario: "verifica productos caducados"
 {"mensaje": "Verificando productos caducados", "accion": "verificar_caducados", "entidad": "desechos", "datos": {}}
 
 Usuario: "qué productos tienen stock bajo"
-{"mensaje": "Estos son los productos con stock crítico", "accion": "estadisticas_stock_bajo", "entidad": "", "datos": {"umbral": 10}}`;
+{"mensaje": "Productos con stock crítico", "accion": "estadisticas_stock_bajo", "entidad": "", "datos": {"umbral": 10}}`;
 
-function buildPrompt(mensajeUsuario) {
+function buildMessages(mensajeUsuario) {
   return [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: mensajeUsuario }
   ];
 }
 
-async function askOllama(modelo, mensajes) {
-  const url = `${OLLAMA_URL}/api/chat`;
+const providers = {
+  'gemini-flash': geminiProvider,
+  'groq-llama': groqProvider,
+  'hf-mistral': huggingfaceProvider
+};
 
-  const body = JSON.stringify({
-    model: modelo,
-    messages: mensajes,
-    format: 'json',
-    stream: false,
-    options: {
-      temperature: 0.1,
-      num_predict: 512
-    }
-  });
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Ollama error (${response.status}): ${text}`);
+async function askProvider(modelo, mensajes) {
+  const provider = providers[modelo];
+  if (!provider) {
+    throw new Error(`Modelo desconocido: ${modelo}. Usa: ${Object.keys(providers).join(', ')}`);
   }
-
-  const data = await response.json();
-  return data.message.content;
+  return provider.ask(mensajes);
 }
 
 function parsearRespuesta(raw) {
-  try {
-    const parsed = JSON.parse(raw.trim());
+  const cleaned = raw.trim();
+  const json = cleaned.startsWith('```') ? cleaned.replace(/```json?\n?|```/g, '').trim() : cleaned;
 
+  try {
+    const parsed = JSON.parse(json);
     if (!parsed.accion || !parsed.mensaje) {
       throw new Error('Respuesta LLM incompleta');
     }
-
     return parsed;
   } catch (e) {
     throw new Error(`Respuesta LLM inválida: ${e.message}. Raw: ${raw}`);
@@ -101,8 +86,8 @@ function parsearRespuesta(raw) {
 }
 
 async function interpretar(mensajeUsuario, modelo) {
-  const mensajes = buildPrompt(mensajeUsuario);
-  const raw = await askOllama(modelo, mensajes);
+  const mensajes = buildMessages(mensajeUsuario);
+  const raw = await askProvider(modelo, mensajes);
   return parsearRespuesta(raw);
 }
 
@@ -110,15 +95,10 @@ async function interpretarConReintento(mensajeUsuario, modelo) {
   try {
     return await interpretar(mensajeUsuario, modelo);
   } catch (error) {
-    const mensajes = buildPrompt(
-      `${mensajeUsuario}\n\nIMPORTANTE: Debes responder SOLO con JSON válido. No incluyas texto, explicaciones ni markdown.`
+    const mensajes = buildMessages(
+      `${mensajeUsuario}\n\nIMPORTANTE: Debes responder SOLO con JSON válido.`
     );
-    mensajes.push({
-      role: 'assistant',
-      content: `{"mensaje": "Voy a procesar tu solicitud", "accion": "error", "entidad": "", "datos": {"motivo": "reintento"}}`
-    });
-
-    const raw = await askOllama(modelo, mensajes);
+    const raw = await askProvider(modelo, mensajes);
     return parsearRespuesta(raw);
   }
 }

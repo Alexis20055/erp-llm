@@ -1,21 +1,21 @@
 const MODELOS = [
   {
-    id: 'llama3.2',
-    nombre: 'Llama 3.2 (3B)',
-    desc: 'Rápido, básico ~2GB RAM',
-    install: 'ollama pull llama3.2'
+    id: 'gemini-flash',
+    nombre: 'Gemini 2.0 Flash',
+    desc: 'Google AI — rápido, preciso, free tier',
+    apiKey: 'GEMINI_API_KEY'
   },
   {
-    id: 'phi3.5',
-    nombre: 'Phi-3.5 (3.8B)',
-    desc: 'Equilibrado ~3GB RAM',
-    install: 'ollama pull phi3.5'
+    id: 'groq-llama',
+    nombre: 'Llama 3.1 70B (Groq)',
+    desc: 'Groq — muy rápido, free tier',
+    apiKey: 'GROQ_API_KEY'
   },
   {
-    id: 'mistral',
-    nombre: 'Mistral (7B)',
-    desc: 'Preciso ~5GB RAM',
-    install: 'ollama pull mistral'
+    id: 'hf-mistral',
+    nombre: 'Mistral 7B (HuggingFace)',
+    desc: 'Hugging Face — gratuito, menos fiable',
+    apiKey: 'HUGGINGFACE_API_KEY'
   }
 ];
 
@@ -63,7 +63,7 @@ function ModelSelector({ modelo, setModelo }) {
       {actual && (
         <span
           style={{ color: "#64748b", fontSize: "12px" }}
-          title={`Instalar: ${actual.install}`}
+          title={actual.apiKey}
         >
           {actual.desc}
         </span>
