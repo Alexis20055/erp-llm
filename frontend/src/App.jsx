@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import api from "./services/api";
 import ChatMessage from "./components/ChatMessage";
 import ProductsTable from "./components/ProductsTable";
+import ProvidersTable from "./components/ProvidersTable";
 
 function App() {
   const [mensaje, setMensaje] = useState("");
   const [chat, setChat] = useState([]);
   const [productos, setProductos] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
   const [cargando, setCargando] = useState(false);
   const chatRef = useRef(null);
 
@@ -14,7 +16,7 @@ function App() {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  }, [chat, cargando, productos]);
+  }, [chat, cargando, productos, proveedores]);
 
   const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -67,6 +69,7 @@ function App() {
         const response = await api.get("/productos");
 
         setProductos(response.data);
+        setProveedores([]);
 
        await esperar(700);
        setCargando(false);
@@ -78,7 +81,8 @@ function App() {
 
         const response = await api.get("/proveedores");
 
-        console.log(response.data);
+        setProveedores(response.data);
+        setProductos([]);
 
        await esperar(700);
        setCargando(false);
@@ -87,6 +91,9 @@ function App() {
 
       // MENSAJE NO ENTENDIDO
       else {
+
+        setProductos([]);
+        setProveedores([]);
 
        await esperar(700);
        setCargando(false);
@@ -175,8 +182,9 @@ function App() {
            <ChatMessage autor="ia" texto="Pensando..." />
          )}
 
-         <ProductsTable productos={productos} />
-       </main>
+          <ProductsTable productos={productos} />
+          <ProvidersTable proveedores={proveedores} />
+        </main>
 
        <section
          style={{
