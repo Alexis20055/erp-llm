@@ -86,9 +86,19 @@ Ambos se actualizan automáticamente tras cada acción del chat.
 
 ## Script de arranque
 
+### Linux / WSL
+
 ```bash
 ./start-erp.sh   # Arranca MongoDB, backend y frontend de golpe
 ```
+
+### Windows (PowerShell)
+
+```powershell
+.\start-erp.ps1  # Arranca MongoDB, backend y frontend de golpe
+```
+
+**Requisitos Windows:** Node.js, Docker Desktop, ejecutar `npm install` en `/backend` y `/frontend` antes del script.
 
 ## Estructura
 
@@ -128,6 +138,24 @@ erp-llm/
 ```bash
 curl http://localhost:5000/api/llm/logs
 ```
+
+### Windows (Git Bash, sin WSL)
+Abrir **dos terminales**:
+
+```bash
+# Terminal 1 — backend
+cd backend
+npm run dev
+
+# Terminal 2 — frontend
+cd frontend
+npm run dev
+
+# Terminal 3 — seed (opcional, el seed se ejecuta solo al crear la BD)
+curl -X POST http://localhost:5000/api/seed
+```
+
+Abrir http://localhost:5173
 
 ## Notas para el profesor
 
