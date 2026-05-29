@@ -1,55 +1,61 @@
 # ERP con IA
 
-Prototipo de ERP con integración de 3 modelos LLM vía APIs cloud gratuitas (Gemini, Groq, HuggingFace).  
-Toda la interacción con el sistema se realiza mediante lenguaje natural a través de un chat.
+Prototipo de ERP donde toda la interacción se realiza mediante lenguaje natural a través de un chat con IA.
+Usa 3 modelos LLM distintos (vía Groq API gratuita) para comparar su precisión y velocidad.
 
 ## Requisitos
 
 - **Node.js** >= 18
-- **MongoDB** corriendo en `localhost:27017`
-- **3 API keys** gratuitas (ver sección Configuración)
-- **Docker** (para MongoDB, o instala MongoDB nativo)
+- **Docker** (para MongoDB)
+- **1 API key gratuita** de Groq (ver sección Configuración)
 
 ## Instalación rápida
 
 ```bash
-# 1. Backend
-cd backend
-npm install
+git clone https://github.com/Alexis20055/erp-llm.git
+cd erp-llm
 
-# 2. Editar .env con tus API keys (ver más abajo)
+# Backend
+cd backend && npm install && cd ..
 
-# 3. Frontend
-cd ../frontend
-npm install
+# Frontend
+cd frontend && npm install && cd ..
 
-# 4. Arrancar MongoDB
+# Crear .env con tu API key de Groq
+echo "GROQ_API_KEY=gsk_tu_key_aqui" > backend/.env
+
+# Arrancar MongoDB
 sudo docker run -d --name mongodb -p 27017:27017 mongo:7
 
-# 5. Arrancar
-cd ..
+# Arrancar todo (backend + frontend + seed automático)
 ./start-erp.sh
 ```
 
 Abrir [http://localhost:5173](http://localhost:5173)
 
-## Configuración: API Keys (GRATIS)
+## Configuración: API Key (GRATIS)
 
-Edita `backend/.env` con las 3 keys:
+Solo necesitas una API key de Groq. Consíguela en https://console.groq.com/keys (registro con email).
+
+Crea `backend/.env`:
 
 ```env
-GEMINI_API_KEY=AIzaSy...        # https://aistudio.google.com/app/apikey
-GROQ_API_KEY=gsk_...            # https://console.groq.com/keys
-HUGGINGFACE_API_KEY=hf_...      # https://huggingface.co/settings/tokens
+GROQ_API_KEY=gsk_tu_key_aqui
 ```
 
-| Proveedor | Modelo | Gratis | Dónde conseguirla |
-|-----------|--------|--------|-------------------|
-| Google Gemini | Gemini 2.0 Flash | 60 req/min, 1500/día | aistudio.google.com (cuenta Google) |
-| Groq | Llama 3.1 70B | 30 req/min, 14400/día | console.groq.com (cuenta email) |
-| Hugging Face | Mistral 7B | 30 req/min, 500/día | huggingface.co/settings/tokens |
+### Modelos disponibles (los 3 vía Groq)
+
+| Modelo | ID en selector | Tamaño | Tiempo resp. |
+|--------|---------------|--------|-------------|
+| Llama 3.3 70B (versatile) | groq-llama | 70B | ~1s |
+| Llama 3.1 8B (instant) | groq-llama8b | 8B | ~0.3s |
+| GPT-OSS 20B | groq-mixtral | 20B | ~0.5s |
+
+Límite gratuito: 30 req/min, 14400 req/día.
 
 ## Poblar base de datos
+
+El `start-erp.sh` lo hace automáticamente. Manualmente:
 
 ```bash
 curl -X POST http://localhost:5000/api/seed
@@ -57,7 +63,7 @@ curl -X POST http://localhost:5000/api/seed
 
 ## Uso
 
-Escribe en lenguaje natural en el chat. Ejemplos:
+Escribe en lenguaje natural en el chat. Cambia de modelo con el desplegable sobre el chat.
 
 | Comando | Qué hace |
 |---------|----------|
@@ -69,7 +75,14 @@ Escribe en lenguaje natural en el chat. Ejemplos:
 | "qué productos tienen stock bajo" | Estadística: stock por debajo de 10 |
 | "cuál es el valor del inventario" | Estadística: valor total del stock |
 
-Usa el desplegable sobre el chat para cambiar entre los 3 modelos.
+## Sidebars
+
+A la derecha del chat se muestran dos paneles informativos:
+
+- **Inventario**: total de productos, unidades en stock, lista completa con barras proporcionales y código de colores (rojo ≤ 0, naranja < 5, amarillo < 10, verde ≥ 10)
+- **Desechos**: total de registros, unidades perdidas, lista con producto, cantidad, motivo y fecha
+
+Ambos se actualizan automáticamente tras cada acción del chat.
 
 ## Script de arranque
 
@@ -82,16 +95,43 @@ Usa el desplegable sobre el chat para cambiar entre los 3 modelos.
 ```
 erp-llm/
 ├── backend/
-│   ├── controllers/        # Lógica de endpoints
-│   ├── models/             # Schemas de Mongoose
+│   ├── controllers/          # productoController, proveedorController, pedidoController,
+│   │                         # desechoController, estadisticasController, llmController, seedController
+│   ├── models/               # Producto, Proveedor, Pedido, Desecho (Mongoose)
 │   ├── services/
-│   │   ├── providers/      # geminiProvider, groqProvider, huggingfaceProvider
-│   │   ├── llmService.js   # Router a providers
-│   │   └── actionExecutor.js
-│   └── index.js
+│   │   ├── providers/
+│   │   │   └── groqProvider.js          # Único proveedor con 3 modelos
+│   │   ├── llmService.js                # System prompt + reintentos JSON
+│   │   └── actionExecutor.js            # Ejecuta acciones LLM contra MongoDB
+│   ├── rutas/                # Archivos de rutas Express
+│   ├── index.js              # Entry point
+│   └── .env                  # GROQ_API_KEY (gitignored)
 ├── frontend/
-│   ├── src/components/     # ChatMessage, ProductsTable, ProvidersTable, StatsView, ModelSelector
-│   └── src/services/api.js
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ChatMessage.jsx          # Burbuja de chat con typewriter
+│   │   │   ├── ProductsTable.jsx        # Tabla de productos
+│   │   │   ├── ProvidersTable.jsx       # Tabla de proveedores
+│   │   │   ├── StatsView.jsx           # Stock bajo, valor inventario, desechos por mes
+│   │   │   ├── ModelSelector.jsx       # Dropdown 3 modelos Groq
+│   │   │   ├── InventorySidebar.jsx    # Sidebar inventario en vivo
+│   │   │   └── WasteSidebar.jsx        # Sidebar desechos en vivo
+│   │   ├── services/api.js  # Axios (localhost:5000/api)
+│   │   └── App.jsx           # Chat + sidebars + layout 3 columnas
+│   └── vite.config.js
 ├── start-erp.sh
 └── README.md
 ```
+
+## Ver logs de interacciones LLM
+
+```bash
+curl http://localhost:5000/api/llm/logs
+```
+
+## Notas para el profesor
+
+- Solo se necesita **una API key** (Groq), gratis
+- El seed se ejecuta automáticamente al arrancar
+- Los 3 modelos usan el mismo proveedor; se cambian desde el desplegable
+- Si un modelo falla (deprecado), probar otro y avisar
