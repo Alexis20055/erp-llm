@@ -1,10 +1,27 @@
 const MODELOS = [
-  { id: 'llama3.2', nombre: 'Llama 3.2 (3B)', desc: 'Rápido, básico ~2GB RAM' },
-  { id: 'phi3.5', nombre: 'Phi-3.5 (3.8B)', desc: 'Equilibrado ~3GB RAM' },
-  { id: 'mistral', nombre: 'Mistral (7B)', desc: 'Preciso ~5GB RAM' }
+  {
+    id: 'llama3.2',
+    nombre: 'Llama 3.2 (3B)',
+    desc: 'Rápido, básico ~2GB RAM',
+    install: 'ollama pull llama3.2'
+  },
+  {
+    id: 'phi3.5',
+    nombre: 'Phi-3.5 (3.8B)',
+    desc: 'Equilibrado ~3GB RAM',
+    install: 'ollama pull phi3.5'
+  },
+  {
+    id: 'mistral',
+    nombre: 'Mistral (7B)',
+    desc: 'Preciso ~5GB RAM',
+    install: 'ollama pull mistral'
+  }
 ];
 
 function ModelSelector({ modelo, setModelo }) {
+  const actual = MODELOS.find((m) => m.id === modelo);
+
   return (
     <div
       style={{
@@ -43,6 +60,14 @@ function ModelSelector({ modelo, setModelo }) {
           </option>
         ))}
       </select>
+      {actual && (
+        <span
+          style={{ color: "#64748b", fontSize: "12px" }}
+          title={`Instalar: ${actual.install}`}
+        >
+          {actual.desc}
+        </span>
+      )}
     </div>
   );
 }
