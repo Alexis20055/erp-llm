@@ -100,36 +100,64 @@ function InventorySidebar({ refreshTrigger }) {
               <div
                 key={p._id}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
                   background: "#111827",
                   padding: "10px 12px",
                   borderRadius: "10px",
                 }}
               >
-                <span
+                <div
                   style={{
-                    fontSize: "14px",
-                    color: "#f8fafc",
-                    flex: 1,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "6px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color: "#f8fafc",
+                      flex: 1,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {p.nombre}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      color: getColor(p.stock),
+                      marginLeft: "8px",
+                    }}
+                  >
+                    {p.stock}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: "4px",
+                    background: "#1e293b",
+                    borderRadius: "2px",
                     overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
                   }}
                 >
-                  {p.nombre}
-                </span>
-                <span
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                    color: getColor(p.stock),
-                    marginLeft: "8px",
-                  }}
-                >
-                  {p.stock}
-                </span>
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${
+                        totalStock > 0
+                          ? (p.stock / totalStock) * 100
+                          : 0
+                      }%`,
+                      background: getColor(p.stock),
+                      borderRadius: "2px",
+                      transition: "width 0.3s ease",
+                    }}
+                  />
+                </div>
               </div>
             ))}
           </div>
