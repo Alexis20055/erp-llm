@@ -1,8 +1,17 @@
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-async function ask(mensajes) {
+const MODELOS = {
+  'groq-llama': 'llama-3.3-70b-versatile',
+  'groq-llama8b': 'llama-3.1-8b-instant',
+  'groq-mixtral': 'mixtral-8x7b-32768'
+};
+
+async function ask(mensajes, modeloId) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('GROQ_API_KEY no configurada en .env');
+
+  const model = MODELOS[modeloId];
+  if (!model) throw new Error(`Modelo Groq desconocido: ${modeloId}`);
 
   const response = await fetch(GROQ_URL, {
     method: 'POST',
@@ -11,7 +20,7 @@ async function ask(mensajes) {
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model,
       messages: mensajes.map(m => ({ role: m.role, content: m.content })),
       response_format: { type: 'json_object' },
       temperature: 0.1,
@@ -28,4 +37,4 @@ async function ask(mensajes) {
   return data.choices[0].message.content;
 }
 
-module.exports = { ask };
+module.exports = { ask, modelosDisponibles: Object.keys(MODELOS) };

@@ -1,6 +1,4 @@
-const geminiProvider = require('./providers/geminiProvider');
 const groqProvider = require('./providers/groqProvider');
-const huggingfaceProvider = require('./providers/huggingfaceProvider');
 
 const SYSTEM_PROMPT = `Eres un asistente de ERP especializado en interpretar mensajes de usuarios y convertirlos en acciones del sistema.
 
@@ -56,18 +54,8 @@ function buildMessages(mensajeUsuario) {
   ];
 }
 
-const providers = {
-  'gemini-flash': geminiProvider,
-  'groq-llama': groqProvider,
-  'hf-mistral': huggingfaceProvider
-};
-
 async function askProvider(modelo, mensajes) {
-  const provider = providers[modelo];
-  if (!provider) {
-    throw new Error(`Modelo desconocido: ${modelo}. Usa: ${Object.keys(providers).join(', ')}`);
-  }
-  return provider.ask(mensajes);
+  return groqProvider.ask(mensajes, modelo);
 }
 
 function parsearRespuesta(raw) {

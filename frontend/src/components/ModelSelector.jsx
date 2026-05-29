@@ -1,21 +1,21 @@
 const MODELOS = [
   {
-    id: 'gemini-flash',
-    nombre: 'Gemini 2.0 Flash',
-    desc: 'Google AI — rápido, preciso, free tier',
-    apiKey: 'GEMINI_API_KEY'
-  },
-  {
     id: 'groq-llama',
     nombre: 'Llama 3.3 70B (Groq)',
-    desc: 'Groq — muy rápido, free tier',
+    desc: 'Preciso, ~1s',
     apiKey: 'GROQ_API_KEY'
   },
   {
-    id: 'hf-mistral',
-    nombre: 'Gemma 2 2B (HuggingFace)',
-    desc: 'HF — ligero, cold start ~20s',
-    apiKey: 'HUGGINGFACE_API_KEY'
+    id: 'groq-llama8b',
+    nombre: 'Llama 3.1 8B (Groq)',
+    desc: 'Rápido, ~0.3s',
+    apiKey: 'GROQ_API_KEY'
+  },
+  {
+    id: 'groq-mixtral',
+    nombre: 'Mixtral 8x7B (Groq)',
+    desc: 'MoE, ~1.5s',
+    apiKey: 'GROQ_API_KEY'
   }
 ];
 
@@ -61,10 +61,7 @@ function ModelSelector({ modelo, setModelo }) {
         ))}
       </select>
       {actual && (
-        <span
-          style={{ color: "#64748b", fontSize: "12px" }}
-          title={actual.apiKey}
-        >
+        <span style={{ color: "#64748b", fontSize: "12px" }}>
           {actual.desc}
         </span>
       )}
