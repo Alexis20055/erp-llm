@@ -5,6 +5,7 @@ import ProductsTable from "./components/ProductsTable";
 import ProvidersTable from "./components/ProvidersTable";
 import StatsView from "./components/StatsView";
 import ModelSelector from "./components/ModelSelector";
+import InventorySidebar from "./components/InventorySidebar";
 
 function App() {
   const [mensaje, setMensaje] = useState("");
@@ -136,56 +137,59 @@ function App() {
 
         <ModelSelector modelo={modelo} setModelo={setModelo} />
 
-        <main
-          ref={chatRef}
-          style={{
-            flex: 1,
-            border: "1px solid #334155",
-            background: "rgba(15, 23, 42, 0.85)",
-            padding: "20px",
-            borderRadius: "20px",
-            overflowY: "auto",
-            boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
-          }}
-        >
-          {chat.length === 0 && (
-            <div
-              style={{
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#94a3b8",
-                textAlign: "center",
-              }}
-            >
-              <div>
-                <h2 style={{ color: "white" }}>Bienvenido al ERP inteligente</h2>
-                <p>Escribe una orden como: "Muéstrame los productos"</p>
-                <p style={{ fontSize: "13px", marginTop: "8px", color: "#64748b" }}>
-                  También puedes crear productos, proveedores, pedidos y consultar estadísticas.
-                </p>
+        <div style={{ display: "flex", gap: "16px", flex: 1, overflow: "hidden" }}>
+          <main
+            ref={chatRef}
+            style={{
+              flex: 1,
+              border: "1px solid #334155",
+              background: "rgba(15, 23, 42, 0.85)",
+              padding: "20px",
+              borderRadius: "20px",
+              overflowY: "auto",
+              boxShadow: "0 20px 50px rgba(0,0,0,0.35)",
+            }}
+          >
+            {chat.length === 0 && (
+              <div
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#94a3b8",
+                  textAlign: "center",
+                }}
+              >
+                <div>
+                  <h2 style={{ color: "white" }}>Bienvenido al ERP inteligente</h2>
+                  <p>Escribe una orden como: "Muéstrame los productos"</p>
+                  <p style={{ fontSize: "13px", marginTop: "8px", color: "#64748b" }}>
+                    También puedes crear productos, proveedores, pedidos y consultar estadísticas.
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {chat.map((msg, index) => (
-            <ChatMessage
-              key={index}
-              autor={msg.autor}
-              texto={msg.texto}
-              escribiendo={msg.escribiendo}
-            />
-          ))}
+            {chat.map((msg, index) => (
+              <ChatMessage
+                key={index}
+                autor={msg.autor}
+                texto={msg.texto}
+                escribiendo={msg.escribiendo}
+              />
+            ))}
 
-          {cargando && (
-            <ChatMessage autor="ia" texto="Pensando..." />
-          )}
+            {cargando && (
+              <ChatMessage autor="ia" texto="Pensando..." />
+            )}
 
-          <ProductsTable productos={productos} />
-          <ProvidersTable proveedores={proveedores} />
-          <StatsView stats={stats} />
-        </main>
+            <ProductsTable productos={productos} />
+            <ProvidersTable proveedores={proveedores} />
+            <StatsView stats={stats} />
+          </main>
+          <InventorySidebar />
+        </div>
 
         <section
           style={{
