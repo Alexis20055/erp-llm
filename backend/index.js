@@ -14,6 +14,7 @@ app.use('/api/proveedores', require('./rutas/rutasProveedor'));
 app.use('/api/pedidos', require('./rutas/rutaPedidos'));
 app.use('/api/desechos', require('./rutas/rutaDesechos'));
 app.use('/api/estadisticas', require('./rutas/rutaEstadisticas'));
+app.use('/api/llm', require('./rutas/rutaLLM'));
 
 
 const PORT = process.env.PORT || 5000;
