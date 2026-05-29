@@ -7,7 +7,7 @@ const MODELOS = [
   },
   {
     id: 'groq-llama',
-    nombre: 'Llama 3.1 70B (Groq)',
+    nombre: 'Llama 3.3 70B (Groq)',
     desc: 'Groq — muy rápido, free tier',
     apiKey: 'GROQ_API_KEY'
   },

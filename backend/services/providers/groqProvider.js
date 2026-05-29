@@ -11,7 +11,7 @@ async function ask(mensajes) {
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'llama3-70b-8192',
+      model: 'llama-3.3-70b-versatile',
       messages: mensajes.map(m => ({ role: m.role, content: m.content })),
       response_format: { type: 'json_object' },
       temperature: 0.1,
