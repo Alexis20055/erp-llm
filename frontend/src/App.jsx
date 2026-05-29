@@ -6,6 +6,7 @@ import ProvidersTable from "./components/ProvidersTable";
 import StatsView from "./components/StatsView";
 import ModelSelector from "./components/ModelSelector";
 import InventorySidebar from "./components/InventorySidebar";
+import WasteSidebar from "./components/WasteSidebar";
 
 function App() {
   const [mensaje, setMensaje] = useState("");
@@ -192,6 +193,7 @@ function App() {
             <StatsView stats={stats} />
           </main>
           <InventorySidebar refreshTrigger={refreshTrigger} />
+          <WasteSidebar refreshTrigger={refreshTrigger} />
         </div>
 
         <section
