@@ -15,6 +15,7 @@ function App() {
   const [stats, setStats] = useState(null);
   const [modelo, setModelo] = useState("groq-llama");
   const [cargando, setCargando] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const chatRef = useRef(null);
 
   useEffect(() => {
@@ -101,6 +102,8 @@ function App() {
       setCargando(false);
       const msg = error.response?.data?.mensaje || error.message;
       await escribirRespuestaIA(`Error: ${msg}`);
+    } finally {
+      setRefreshTrigger((n) => n + 1);
     }
   };
 
@@ -188,7 +191,7 @@ function App() {
             <ProvidersTable proveedores={proveedores} />
             <StatsView stats={stats} />
           </main>
-          <InventorySidebar />
+          <InventorySidebar refreshTrigger={refreshTrigger} />
         </div>
 
         <section

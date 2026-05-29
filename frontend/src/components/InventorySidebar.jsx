@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
 
-function InventorySidebar() {
+function InventorySidebar({ refreshTrigger }) {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     fetchProductos();
-  }, []);
+  }, [refreshTrigger]);
 
   async function fetchProductos() {
     try {
